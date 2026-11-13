@@ -1,0 +1,7 @@
+# Reference version: clang-tidy 18 (Ubuntu 24.04 package).
+Checks: '-*,bugprone-macro-parentheses'
+WarningsAsErrors: 'bugprone-macro-parentheses'
+# Report only macros defined in our own code. This regex is a default for
+# local runs; the CI component passes a --header-filter anchored at the
+# repository root instead, because clang-tidy 18 has no ExcludeHeaderFilterRegex.
+HeaderFilterRegex: '/(include/mbedtls|library)/'

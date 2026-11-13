@@ -198,3 +198,30 @@ component_check_test_helpers () {
     msg "unit test: generate_config_checks.py"
     tests/scripts/test_config_checks.py 2>&1
 }
+
+component_check_macro_parens () {
+    msg "Check: macro hygiene (clang-tidy bugprone-macro-parentheses)" # ~ 5s
+    # clang-tidy only sees macros in active #if branches, so check more than
+    # one configuration. See .clang-tidy for the policy and how to make
+    # exceptions (NOLINT, NOLINTNEXTLINE, NOLINTBEGIN/NOLINTEND).
+    # tf-psa-crypto is checked in its own CI.
+    for config in default full; do
+        if [ "$config" = "full" ]; then
+            scripts/config.py full
+        fi
+        rm -rf build-clang-tidy
+        cmake -B build-clang-tidy -DCMAKE_EXPORT_COMPILE_COMMANDS=ON .
+        cmake --build build-clang-tidy --target \
+              libmbedx509_generated_files_target libmbedtls_generated_files_target \
+              libtfpsacrypto_generated_files_target
+        run-clang-tidy-18 -clang-tidy-binary clang-tidy-18 -quiet -p build-clang-tidy \
+            -extra-arg=-Wno-unknown-warning-option \
+            -header-filter="^$PWD/(include|library)/" \
+            "^$PWD/library/"
+    done
+    rm -rf build-clang-tidy
+}
+
+support_check_macro_parens () {
+    type clang-tidy-18 >/dev/null 2>&1 && type run-clang-tidy-18 >/dev/null 2>&1
+}

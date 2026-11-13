@@ -33,7 +33,7 @@ static int local_err_translation(psa_status_t status)
 #define PSA_TO_MBEDTLS_ERR(status) local_err_translation(status)
 
 #define MBEDTLS_SSL_TLS1_3_LABEL(name, string)       \
-    .name = string,
+    .name = string, /* NOLINT(bugprone-macro-parentheses): designated initializer */
 
 struct mbedtls_ssl_tls13_labels_struct const mbedtls_ssl_tls13_labels =
 {
@@ -86,9 +86,9 @@ static const char tls13_label_prefix[6] MBEDTLS_ATTRIBUTE_UNTERMINATED_STRING = 
 #define SSL_TLS1_3_KEY_SCHEDULE_HKDF_LABEL_LEN(label_len, context_len) \
     (2                     /* expansion length           */ \
      + 1                   /* label length               */ \
-     + label_len                                           \
+     + (label_len)                                         \
      + 1                   /* context length             */ \
-     + context_len)
+     + (context_len))
 
 #define SSL_TLS1_3_KEY_SCHEDULE_MAX_HKDF_LABEL_LEN                      \
     SSL_TLS1_3_KEY_SCHEDULE_HKDF_LABEL_LEN(                             \

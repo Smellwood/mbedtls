@@ -67,11 +67,12 @@
  * descriptor of an mbedtls_x509_oid_descriptor_t wrapper.
  */
 #define FN_OID_GET_DESCRIPTOR_ATTR1(FN_NAME, TYPE_T, TYPE_NAME, ATTR1_TYPE, ATTR1) \
+/* NOLINTNEXTLINE(bugprone-macro-parentheses): parameter names, not expressions */ \
     int FN_NAME(const mbedtls_asn1_buf *oid, ATTR1_TYPE * ATTR1)                  \
     {                                                                       \
         const TYPE_T *data = oid_ ## TYPE_NAME ## _from_asn1(oid);        \
         if (data == NULL) return MBEDTLS_ERR_X509_UNKNOWN_OID;            \
-        *ATTR1 = data->descriptor.ATTR1;                                    \
+        *(ATTR1) = data->descriptor.ATTR1;                                    \
         return 0;                                                        \
     }
 #endif /* MBEDTLS_X509_REMOVE_INFO */
@@ -81,11 +82,12 @@
  * mbedtls_x509_oid_descriptor_t wrapper.
  */
 #define FN_OID_GET_ATTR1(FN_NAME, TYPE_T, TYPE_NAME, ATTR1_TYPE, ATTR1) \
+/* NOLINTNEXTLINE(bugprone-macro-parentheses): parameter names, not expressions */ \
     int FN_NAME(const mbedtls_asn1_buf *oid, ATTR1_TYPE * ATTR1)                  \
     {                                                                       \
         const TYPE_T *data = oid_ ## TYPE_NAME ## _from_asn1(oid);        \
         if (data == NULL) return MBEDTLS_ERR_X509_UNKNOWN_OID;            \
-        *ATTR1 = data->ATTR1;                                               \
+        *(ATTR1) = data->ATTR1;                                               \
         return 0;                                                        \
     }
 
@@ -95,8 +97,10 @@
  */
 #define FN_OID_GET_ATTR2(FN_NAME, TYPE_T, TYPE_NAME, ATTR1_TYPE, ATTR1,     \
                          ATTR2_TYPE, ATTR2)                                 \
+    /* NOLINTBEGIN(bugprone-macro-parentheses): parameter names */              \
     int FN_NAME(const mbedtls_asn1_buf *oid, ATTR1_TYPE * ATTR1,               \
                 ATTR2_TYPE * ATTR2)              \
+    /* NOLINTEND(bugprone-macro-parentheses) */                                \
     {                                                                           \
         const TYPE_T *data = oid_ ## TYPE_NAME ## _from_asn1(oid);            \
         if (data == NULL) return MBEDTLS_ERR_X509_UNKNOWN_OID;                 \

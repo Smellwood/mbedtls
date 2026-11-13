@@ -37,6 +37,7 @@
  * \name X509 Error codes
  * \{
  */
+/* NOLINTBEGIN(bugprone-macro-parentheses): negative integer constants are unambiguous */
 /** Unavailable feature, e.g. RSA hashing/encryption combination. */
 #define MBEDTLS_ERR_X509_FEATURE_UNAVAILABLE              -0x2080
 /** Requested OID is unknown. */
@@ -77,6 +78,7 @@
 #define MBEDTLS_ERR_X509_BUFFER_TOO_SMALL                 PSA_ERROR_BUFFER_TOO_SMALL
 /** A fatal error occurred, eg the chain is too long or the vrfy callback failed. */
 #define MBEDTLS_ERR_X509_FATAL_ERROR                      -0x3000
+/* NOLINTEND(bugprone-macro-parentheses) */
 /** \} name X509 Error codes */
 
 /**

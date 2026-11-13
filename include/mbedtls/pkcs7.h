@@ -47,6 +47,7 @@
 #include "mbedtls/asn1.h"
 #include "mbedtls/x509_crt.h"
 
+/* NOLINTBEGIN(bugprone-macro-parentheses): negative integer constants are unambiguous */
 /**
  * \name PKCS #7 Module Error codes
  * \{
@@ -63,6 +64,7 @@
 #define MBEDTLS_ERR_PKCS7_ALLOC_FAILED                     PSA_ERROR_INSUFFICIENT_MEMORY  /**< Allocation of memory failed. */
 #define MBEDTLS_ERR_PKCS7_VERIFY_FAIL                      PSA_ERROR_INVALID_SIGNATURE  /**< Verification Failed */
 #define MBEDTLS_ERR_PKCS7_CERT_DATE_INVALID                -0x5880  /**< The PKCS #7 date issued/expired dates are invalid */
+/* NOLINTEND(bugprone-macro-parentheses) */
 /* \} name */
 
 /**

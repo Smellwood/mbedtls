@@ -34,6 +34,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+/* NOLINTBEGIN(bugprone-macro-parentheses): negative integer constants are unambiguous */
 /** Failed to open a socket. */
 #define MBEDTLS_ERR_NET_SOCKET_FAILED                     -0x0042
 /** The connection to the given server / port failed. */
@@ -60,6 +61,7 @@
 #define MBEDTLS_ERR_NET_POLL_FAILED                       -0x0047
 /** Input invalid. */
 #define MBEDTLS_ERR_NET_BAD_INPUT_DATA                    -0x0049
+/* NOLINTEND(bugprone-macro-parentheses) */
 
 #define MBEDTLS_NET_LISTEN_BACKLOG         10 /**< The backlog that listen() should use. */
 
