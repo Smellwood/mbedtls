@@ -3625,3 +3625,12 @@ tls13_record_boundary_alignment:MBEDTLS_SSL_IS_SERVER:MBEDTLS_SSL_HS_FINISHED
 TLS 1.3 EndOfEarlyData record boundary alignment enforcement
 depends_on:MBEDTLS_SSL_EARLY_DATA:MBEDTLS_SSL_SESSION_TICKETS
 tls13_record_boundary_alignment:MBEDTLS_SSL_IS_SERVER:MBEDTLS_SSL_HS_END_OF_EARLY_DATA
+
+TLS 1.2 SignatureAndHashAlgorithm macros: ECDSA with SHA-256
+ssl_tls12_sig_and_hash_alg_macros:MBEDTLS_SSL_SIG_ECDSA:MBEDTLS_SSL_HASH_SHA256
+
+TLS 1.2 SignatureAndHashAlgorithm macros: RSA with SHA-384
+ssl_tls12_sig_and_hash_alg_macros:MBEDTLS_SSL_SIG_RSA:MBEDTLS_SSL_HASH_SHA384
+
+TLS 1.2 SignatureAndHashAlgorithm macros: ECDSA with SHA-512
+ssl_tls12_sig_and_hash_alg_macros:MBEDTLS_SSL_SIG_ECDSA:MBEDTLS_SSL_HASH_SHA512
