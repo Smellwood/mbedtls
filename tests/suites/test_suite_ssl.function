@@ -6839,6 +6839,42 @@ exit:
 }
 /* END_CASE */
 
+/* BEGIN_CASE depends_on:MBEDTLS_SSL_PROTO_TLS1_2:MBEDTLS_SSL_HANDSHAKE_WITH_CERT_ENABLED */
+void ssl_tls12_sig_and_hash_alg_macros(int sig, int hash)
+{
+    /* Check that the TLS 1.2 SignatureAndHashAlgorithm macros treat each
+     * argument as a unit, even when it is an expression containing
+     * operators of lower precedence than the ones used in the macro
+     * (https://github.com/Mbed-TLS/mbedtls/issues/10851). */
+    volatile int one = 1;
+    const unsigned sig_and_hash = ((unsigned) hash << 8) | (unsigned) sig;
+
+    TEST_EQUAL(MBEDTLS_SSL_TLS12_SIG_AND_HASH_ALG(sig, hash), sig_and_hash);
+    TEST_EQUAL(MBEDTLS_SSL_TLS12_SIG_AND_HASH_ALG(sig | 0, hash | 0),
+               sig_and_hash);
+    TEST_EQUAL(MBEDTLS_SSL_TLS12_SIG_AND_HASH_ALG(one ? sig : 0,
+                                                  one ? hash : 0),
+               sig_and_hash);
+
+    TEST_EQUAL(MBEDTLS_SSL_TLS12_SIG_ALG_FROM_SIG_AND_HASH_ALG(sig_and_hash),
+               sig);
+    TEST_EQUAL(MBEDTLS_SSL_TLS12_SIG_ALG_FROM_SIG_AND_HASH_ALG(
+                   (hash << 8) | sig), sig);
+    TEST_EQUAL(MBEDTLS_SSL_TLS12_SIG_ALG_FROM_SIG_AND_HASH_ALG(
+                   one ? sig_and_hash : 0), sig);
+
+    TEST_EQUAL(MBEDTLS_SSL_TLS12_HASH_ALG_FROM_SIG_AND_HASH_ALG(sig_and_hash),
+               hash);
+    TEST_EQUAL(MBEDTLS_SSL_TLS12_HASH_ALG_FROM_SIG_AND_HASH_ALG(
+                   (hash << 8) | sig), hash);
+    TEST_EQUAL(MBEDTLS_SSL_TLS12_HASH_ALG_FROM_SIG_AND_HASH_ALG(
+                   one ? sig_and_hash : 0), hash);
+
+exit:
+    ;
+}
+/* END_CASE */
+
 /* BEGIN_CASE depends_on:MBEDTLS_SSL_PROTO_TLS1_2:MBEDTLS_SSL_PROTO_TLS1_3:MBEDTLS_SSL_CLI_C:MBEDTLS_SSL_SRV_C:MBEDTLS_TEST_HAS_TLS1_3_CHACHA20_POLY1305_SHA256:MBEDTLS_SSL_TLS1_3_KEY_EXCHANGE_MODE_EPHEMERAL_ENABLED:MBEDTLS_SSL_TLS1_3_KEY_EXCHANGE_MODE_PSK_EPHEMERAL_ENABLED:PSA_WANT_ALG_SHA_256:PSA_WANT_ECC_SECP_R1_256:PSA_WANT_ECC_SECP_R1_384:PSA_HAVE_ALG_ECDSA_VERIFY:MBEDTLS_SSL_SESSION_TICKETS:MBEDTLS_DEBUG_C */
 void tls13_hrr_then_tls12_second_client_hello()
 {
