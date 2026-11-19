@@ -5021,9 +5021,9 @@ int mbedtls_ecp_mod_p192_raw(mbedtls_mpi_uint *Np, size_t Nn)
 
 #define MAX32   (X_limbs * 2)
 #define A(j)                                                \
-    (j) % 2 ?                                               \
-    (uint32_t) (X[(j) / 2] >> 32) :                         \
-    (uint32_t) (X[(j) / 2])
+    ((j) % 2 ?                                              \
+     (uint32_t) (X[(j) / 2] >> 32) :                        \
+     (uint32_t) (X[(j) / 2]))
 #define STORE32                                             \
     if (i % 2) {                                            \
         X[i/2] &= 0x00000000FFFFFFFF;                       \
