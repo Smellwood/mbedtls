@@ -67,6 +67,7 @@
  * descriptor of an mbedtls_x509_oid_descriptor_t wrapper.
  */
 #define FN_OID_GET_DESCRIPTOR_ATTR1(FN_NAME, TYPE_T, TYPE_NAME, ATTR1_TYPE, ATTR1) \
+    /* NOLINTNEXTLINE(bugprone-macro-parentheses): declares parameter ATTR1 */ \
     int FN_NAME(const mbedtls_asn1_buf *oid, ATTR1_TYPE * ATTR1)                  \
     {                                                                       \
         const TYPE_T *data = oid_ ## TYPE_NAME ## _from_asn1(oid);        \
@@ -81,6 +82,7 @@
  * mbedtls_x509_oid_descriptor_t wrapper.
  */
 #define FN_OID_GET_ATTR1(FN_NAME, TYPE_T, TYPE_NAME, ATTR1_TYPE, ATTR1) \
+    /* NOLINTNEXTLINE(bugprone-macro-parentheses): declares parameter ATTR1 */ \
     int FN_NAME(const mbedtls_asn1_buf *oid, ATTR1_TYPE * ATTR1)                  \
     {                                                                       \
         const TYPE_T *data = oid_ ## TYPE_NAME ## _from_asn1(oid);        \
@@ -95,8 +97,10 @@
  */
 #define FN_OID_GET_ATTR2(FN_NAME, TYPE_T, TYPE_NAME, ATTR1_TYPE, ATTR1,     \
                          ATTR2_TYPE, ATTR2)                                 \
+    /* NOLINTBEGIN(bugprone-macro-parentheses): declares parameters ATTR1, ATTR2 */ \
     int FN_NAME(const mbedtls_asn1_buf *oid, ATTR1_TYPE * ATTR1,               \
                 ATTR2_TYPE * ATTR2)              \
+    /* NOLINTEND(bugprone-macro-parentheses) */ \
     {                                                                           \
         const TYPE_T *data = oid_ ## TYPE_NAME ## _from_asn1(oid);            \
         if (data == NULL) return MBEDTLS_ERR_X509_UNKNOWN_OID;                 \
