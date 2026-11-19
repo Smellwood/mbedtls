@@ -3653,3 +3653,12 @@ tls13_record_boundary_alignment:MBEDTLS_SSL_IS_SERVER:MBEDTLS_SSL_HS_FINISHED
 TLS 1.3 EndOfEarlyData record boundary alignment enforcement
 depends_on:MBEDTLS_SSL_EARLY_DATA:MBEDTLS_SSL_SESSION_TICKETS
 tls13_record_boundary_alignment:MBEDTLS_SSL_IS_SERVER:MBEDTLS_SSL_HS_END_OF_EARLY_DATA
+
+TLS 1.2 write certificate: chain leaves 2 bytes in the buffer
+ssl_write_certificate_chain_size:16372:4000:MBEDTLS_ERR_SSL_BUFFER_TOO_SMALL
+
+TLS 1.2 write certificate: chain leaves 1 byte in the buffer
+ssl_write_certificate_chain_size:16373:4000:MBEDTLS_ERR_SSL_BUFFER_TOO_SMALL
+
+TLS 1.2 write certificate: chain fills the buffer exactly
+ssl_write_certificate_chain_size:16374:1:MBEDTLS_ERR_SSL_BUFFER_TOO_SMALL

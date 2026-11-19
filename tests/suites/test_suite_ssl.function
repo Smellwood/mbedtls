@@ -7042,6 +7042,54 @@ exit:
 }
 /* END_CASE */
 
+/* BEGIN_CASE depends_on:MBEDTLS_SSL_PROTO_TLS1_2:MBEDTLS_SSL_SRV_C:MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED */
+void ssl_write_certificate_chain_size(int first_len, int second_len, int expected_ret)
+{
+    mbedtls_ssl_context ssl;
+    mbedtls_ssl_config conf;
+    mbedtls_x509_crt c1, c2;
+    mbedtls_ssl_key_cert kc;
+    unsigned char *raw1 = NULL, *raw2 = NULL;
+
+    mbedtls_ssl_init(&ssl);
+    mbedtls_ssl_config_init(&conf);
+    mbedtls_x509_crt_init(&c1);
+    mbedtls_x509_crt_init(&c2);
+    MD_OR_USE_PSA_INIT();
+
+    TEST_EQUAL(mbedtls_ssl_config_defaults(&conf, MBEDTLS_SSL_IS_SERVER,
+                                           MBEDTLS_SSL_TRANSPORT_STREAM,
+                                           MBEDTLS_SSL_PRESET_DEFAULT), 0);
+    TEST_EQUAL(mbedtls_ssl_setup(&ssl, &conf), 0);
+    ssl.handshake->ciphersuite_info =
+        mbedtls_ssl_ciphersuite_from_id(MBEDTLS_TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256);
+    TEST_ASSERT(ssl.handshake->ciphersuite_info != NULL);
+
+    /* Only raw.p, raw.len and next of the chain are read. */
+    TEST_CALLOC(raw1, first_len);
+    TEST_CALLOC(raw2, second_len);
+    c1.raw.p = raw1; c1.raw.len = first_len; c1.next = &c2;
+    c2.raw.p = raw2; c2.raw.len = second_len;
+    memset(&kc, 0, sizeof(kc));
+    kc.cert = &c1;
+    ssl.handshake->key_cert = &kc;
+
+    TEST_EQUAL(mbedtls_ssl_write_certificate(&ssl), expected_ret);
+
+exit:
+    /* Don't let the free functions touch the stack-allocated chain. */
+    if (ssl.handshake != NULL) {
+        ssl.handshake->key_cert = NULL;
+    }
+    c1.raw.p = NULL; c2.raw.p = NULL;
+    mbedtls_ssl_free(&ssl);
+    mbedtls_ssl_config_free(&conf);
+    mbedtls_free(raw1);
+    mbedtls_free(raw2);
+    MD_OR_USE_PSA_DONE();
+}
+/* END_CASE */
+
 /* BEGIN_CASE depends_on:MBEDTLS_SSL_HANDSHAKE_WITH_CERT_ENABLED */
 void verify_result_without_handshake(void)
 {
