@@ -29,6 +29,7 @@
 /*
  * RSA Error codes
  */
+/* NOLINTBEGIN(bugprone-macro-parentheses) */
 /** Bad input parameters to function. */
 #define MBEDTLS_ERR_RSA_BAD_INPUT_DATA                    -0x4080
 /** Input data contains invalid padding and is rejected. */
@@ -59,6 +60,7 @@
 #define MBEDTLS_RSA_CRYPT       2 /**< Identifier for RSA encryption and decryption operations. */
 
 #define MBEDTLS_RSA_SALT_LEN_ANY    -1
+/* NOLINTEND(bugprone-macro-parentheses) */
 
 /*
  * The above constants may be used even if the RSA module is compile out,

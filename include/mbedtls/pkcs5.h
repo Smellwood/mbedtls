@@ -22,6 +22,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+/* NOLINTBEGIN(bugprone-macro-parentheses) */
 /** Bad input parameters to function. */
 #define MBEDTLS_ERR_PKCS5_BAD_INPUT_DATA                  -0x2f80
 /** Unexpected ASN.1 data. */
@@ -30,6 +31,7 @@
 #define MBEDTLS_ERR_PKCS5_FEATURE_UNAVAILABLE             -0x2e80
 /** Given private key password does not allow for correct decryption. */
 #define MBEDTLS_ERR_PKCS5_PASSWORD_MISMATCH               -0x2e00
+/* NOLINTEND(bugprone-macro-parentheses) */
 
 #define MBEDTLS_PKCS5_DECRYPT      MBEDTLS_DECRYPT
 #define MBEDTLS_PKCS5_ENCRYPT      MBEDTLS_ENCRYPT

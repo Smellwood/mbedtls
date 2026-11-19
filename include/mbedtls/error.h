@@ -94,6 +94,7 @@
 extern "C" {
 #endif
 
+/* NOLINTBEGIN(bugprone-macro-parentheses) */
 /** Generic error */
 #define MBEDTLS_ERR_ERROR_GENERIC_ERROR       -0x0001
 /** This is a bug in the library */
@@ -103,6 +104,7 @@ extern "C" {
 #define MBEDTLS_ERR_PLATFORM_HW_ACCEL_FAILED     -0x0070
 /** The requested feature is not supported by the platform */
 #define MBEDTLS_ERR_PLATFORM_FEATURE_UNSUPPORTED -0x0072
+/* NOLINTEND(bugprone-macro-parentheses) */
 
 /**
  * \brief Combines a high-level and low-level error code together.

@@ -1361,7 +1361,7 @@
 #define PSA_ALG_AEAD_WITH_DEFAULT_LENGTH_TAG_CASE(aead_alg, ref)         \
     PSA_ALG_AEAD_WITH_SHORTENED_TAG(aead_alg, 0) ==                      \
     PSA_ALG_AEAD_WITH_SHORTENED_TAG(ref, 0) ?                            \
-    ref :
+    (ref) :
 
 /** Macro to build an AEAD minimum-tag-length wildcard algorithm.
  *

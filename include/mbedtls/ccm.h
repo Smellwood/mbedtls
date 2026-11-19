@@ -49,10 +49,12 @@
 #define MBEDTLS_CCM_STAR_DECRYPT  2
 #define MBEDTLS_CCM_STAR_ENCRYPT  3
 
+/* NOLINTBEGIN(bugprone-macro-parentheses) */
 /** Bad input parameters to the function. */
 #define MBEDTLS_ERR_CCM_BAD_INPUT       -0x000D
 /** Authenticated decryption failed. */
 #define MBEDTLS_ERR_CCM_AUTH_FAILED     -0x000F
+/* NOLINTEND(bugprone-macro-parentheses) */
 
 #ifdef __cplusplus
 extern "C" {

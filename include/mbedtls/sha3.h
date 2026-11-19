@@ -25,8 +25,10 @@
 extern "C" {
 #endif
 
+/* NOLINTBEGIN(bugprone-macro-parentheses) */
 /** SHA-3 input data was malformed. */
 #define MBEDTLS_ERR_SHA3_BAD_INPUT_DATA                 -0x0076
+/* NOLINTEND(bugprone-macro-parentheses) */
 
 /**
  * SHA-3 family id.

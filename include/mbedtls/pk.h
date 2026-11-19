@@ -32,6 +32,7 @@
 #include "psa/crypto.h"
 #endif
 
+/* NOLINTBEGIN(bugprone-macro-parentheses) */
 /** Memory allocation failed. */
 #define MBEDTLS_ERR_PK_ALLOC_FAILED        -0x3F80
 /** Type mismatch, eg attempt to encrypt with an ECDSA key */
@@ -62,6 +63,7 @@
 #define MBEDTLS_ERR_PK_SIG_LEN_MISMATCH    -0x3900
 /** The output buffer is too small. */
 #define MBEDTLS_ERR_PK_BUFFER_TOO_SMALL    -0x3880
+/* NOLINTEND(bugprone-macro-parentheses) */
 
 #ifdef __cplusplus
 extern "C" {

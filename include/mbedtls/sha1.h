@@ -23,8 +23,10 @@
 #include <stddef.h>
 #include <stdint.h>
 
+/* NOLINTBEGIN(bugprone-macro-parentheses) */
 /** SHA-1 input data was malformed. */
 #define MBEDTLS_ERR_SHA1_BAD_INPUT_DATA                   -0x0073
+/* NOLINTEND(bugprone-macro-parentheses) */
 
 #ifdef __cplusplus
 extern "C" {

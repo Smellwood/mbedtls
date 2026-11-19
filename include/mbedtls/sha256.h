@@ -19,8 +19,10 @@
 #include <stddef.h>
 #include <stdint.h>
 
+/* NOLINTBEGIN(bugprone-macro-parentheses) */
 /** SHA-256 input data was malformed. */
 #define MBEDTLS_ERR_SHA256_BAD_INPUT_DATA                 -0x0074
+/* NOLINTEND(bugprone-macro-parentheses) */
 
 #ifdef __cplusplus
 extern "C" {

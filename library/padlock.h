@@ -18,7 +18,9 @@
 
 #include "mbedtls/aes.h"
 
+/* NOLINTBEGIN(bugprone-macro-parentheses) */
 #define MBEDTLS_ERR_PADLOCK_DATA_MISALIGNED               -0x0030  /**< Input data should be aligned. */
+/* NOLINTEND(bugprone-macro-parentheses) */
 
 #if defined(__has_feature)
 #if __has_feature(address_sanitizer)

@@ -4921,8 +4921,8 @@ static inline void carry64(mbedtls_mpi_uint *dst, mbedtls_mpi_uint *carry)
     }
 }
 
-#define WIDTH       8 / sizeof(mbedtls_mpi_uint)
-#define A(i)        Np + (i) * WIDTH
+#define WIDTH       (8 / sizeof(mbedtls_mpi_uint))
+#define A(i)        (Np + (i) * WIDTH)
 #define ADD(i)      add64(p, A(i), &c)
 #define NEXT        p += WIDTH; carry64(p, &c)
 #define LAST        p += WIDTH; do *p = 0; while (++p < end)

@@ -49,6 +49,7 @@
 #include "mbedtls/asn1.h"
 #include "mbedtls/x509_crt.h"
 
+/* NOLINTBEGIN(bugprone-macro-parentheses) */
 /**
  * \name PKCS #7 Module Error codes
  * \{
@@ -65,6 +66,7 @@
 #define MBEDTLS_ERR_PKCS7_ALLOC_FAILED                     -0x5780  /**< Allocation of memory failed. */
 #define MBEDTLS_ERR_PKCS7_VERIFY_FAIL                      -0x5800  /**< Verification Failed */
 #define MBEDTLS_ERR_PKCS7_CERT_DATE_INVALID                -0x5880  /**< The PKCS #7 date issued/expired dates are invalid */
+/* NOLINTEND(bugprone-macro-parentheses) */
 /* \} name */
 
 /**

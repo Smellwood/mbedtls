@@ -21,8 +21,10 @@
  *  \name HKDF Error codes
  *  \{
  */
+/* NOLINTBEGIN(bugprone-macro-parentheses) */
 /** Bad input parameters to function. */
 #define MBEDTLS_ERR_HKDF_BAD_INPUT_DATA  -0x5F80
+/* NOLINTEND(bugprone-macro-parentheses) */
 /** \} name */
 
 #ifdef __cplusplus

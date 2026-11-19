@@ -41,6 +41,7 @@
  * \name X509 Error codes
  * \{
  */
+/* NOLINTBEGIN(bugprone-macro-parentheses) */
 /** Unavailable feature, e.g. RSA hashing/encryption combination. */
 #define MBEDTLS_ERR_X509_FEATURE_UNAVAILABLE              -0x2080
 /** Requested OID is unknown. */
@@ -127,6 +128,7 @@
  * Add NONE for the benefit of x509_crt_infer_name_type().
  */
 #define MBEDTLS_X509_SAN_NONE                           -1
+/* NOLINTEND(bugprone-macro-parentheses) */
 #define MBEDTLS_X509_SAN_OTHER_NAME                      0
 #define MBEDTLS_X509_SAN_RFC822_NAME                     1
 #define MBEDTLS_X509_SAN_DNS_NAME                        2

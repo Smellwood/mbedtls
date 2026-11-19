@@ -31,6 +31,7 @@
 /*
  * ECP error codes
  */
+/* NOLINTBEGIN(bugprone-macro-parentheses) */
 /** Bad input parameters to function. */
 #define MBEDTLS_ERR_ECP_BAD_INPUT_DATA                    -0x4F80
 /** The buffer is too small to write to. */
@@ -49,6 +50,7 @@
 #define MBEDTLS_ERR_ECP_SIG_LEN_MISMATCH                  -0x4C00
 /** Operation in progress, call again with the same parameters to continue. */
 #define MBEDTLS_ERR_ECP_IN_PROGRESS                       -0x4B00
+/* NOLINTEND(bugprone-macro-parentheses) */
 
 /* Flags indicating whether to include code that is specific to certain
  * types of curves. These flags are for internal library use only. */

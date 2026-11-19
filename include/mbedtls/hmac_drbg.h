@@ -26,6 +26,7 @@
 /*
  * Error codes
  */
+/* NOLINTBEGIN(bugprone-macro-parentheses) */
 /** Too many random requested in single call. */
 #define MBEDTLS_ERR_HMAC_DRBG_REQUEST_TOO_BIG              -0x0003
 /** Input too large (Entropy + additional). */
@@ -34,6 +35,7 @@
 #define MBEDTLS_ERR_HMAC_DRBG_FILE_IO_ERROR                -0x0007
 /** The entropy source failed. */
 #define MBEDTLS_ERR_HMAC_DRBG_ENTROPY_SOURCE_FAILED        -0x0009
+/* NOLINTEND(bugprone-macro-parentheses) */
 
 /**
  * \name SECTION: Module settings

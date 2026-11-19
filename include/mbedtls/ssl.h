@@ -43,6 +43,7 @@
 /*
  * SSL Error codes
  */
+/* NOLINTBEGIN(bugprone-macro-parentheses) */
 /** A cryptographic operation is in progress. Try again later. */
 #define MBEDTLS_ERR_SSL_CRYPTO_IN_PROGRESS                -0x7000
 /** The requested feature is not available. */
@@ -202,6 +203,7 @@
  *   is not enabled.
  */
 #define MBEDTLS_ERR_SSL_CERTIFICATE_VERIFICATION_WITHOUT_HOSTNAME  -0x5D80
+/* NOLINTEND(bugprone-macro-parentheses) */
 
 /*
  * Constants from RFC 8446 for TLS 1.3 PSK modes
@@ -343,7 +345,9 @@
 #define MBEDTLS_SSL_ANTI_REPLAY_DISABLED        0
 #define MBEDTLS_SSL_ANTI_REPLAY_ENABLED         1
 
+/* NOLINTBEGIN(bugprone-macro-parentheses) */
 #define MBEDTLS_SSL_RENEGOTIATION_NOT_ENFORCED  -1
+/* NOLINTEND(bugprone-macro-parentheses) */
 #define MBEDTLS_SSL_RENEGO_MAX_RECORDS_DEFAULT  16
 
 #define MBEDTLS_SSL_LEGACY_NO_RENEGOTIATION     0

@@ -21,6 +21,7 @@
  * PEM data.
  * \{
  */
+/* NOLINTBEGIN(bugprone-macro-parentheses) */
 /** No PEM header or footer found. */
 #define MBEDTLS_ERR_PEM_NO_HEADER_FOOTER_PRESENT          -0x1080
 /** PEM string is not as expected. */
@@ -39,6 +40,7 @@
 #define MBEDTLS_ERR_PEM_FEATURE_UNAVAILABLE               -0x1400
 /** Bad input parameters to function. */
 #define MBEDTLS_ERR_PEM_BAD_INPUT_DATA                    -0x1480
+/* NOLINTEND(bugprone-macro-parentheses) */
 /** \} name PEM Error codes */
 
 #ifdef __cplusplus

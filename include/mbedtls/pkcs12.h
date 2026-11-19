@@ -18,6 +18,7 @@
 
 #include <stddef.h>
 
+/* NOLINTBEGIN(bugprone-macro-parentheses) */
 /** Bad input parameters to function. */
 #define MBEDTLS_ERR_PKCS12_BAD_INPUT_DATA                 -0x1F80
 /** Feature not available, e.g. unsupported encryption scheme. */
@@ -26,6 +27,7 @@
 #define MBEDTLS_ERR_PKCS12_PBE_INVALID_FORMAT             -0x1E80
 /** Given private key password does not allow for correct decryption. */
 #define MBEDTLS_ERR_PKCS12_PASSWORD_MISMATCH              -0x1E00
+/* NOLINTEND(bugprone-macro-parentheses) */
 
 #define MBEDTLS_PKCS12_DERIVE_KEY       1   /**< encryption/decryption key */
 #define MBEDTLS_PKCS12_DERIVE_IV        2   /**< initialization vector     */

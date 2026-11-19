@@ -33,6 +33,7 @@
  * ASN1 is a standard to specify data structures.
  * \{
  */
+/* NOLINTBEGIN(bugprone-macro-parentheses) */
 /** Out of data when parsing an ASN1 data structure. */
 #define MBEDTLS_ERR_ASN1_OUT_OF_DATA                      -0x0060
 /** ASN1 tag was of an unexpected value. */
@@ -47,6 +48,7 @@
 #define MBEDTLS_ERR_ASN1_ALLOC_FAILED                     -0x006A
 /** Buffer too small when writing ASN.1 data structure. */
 #define MBEDTLS_ERR_ASN1_BUF_TOO_SMALL                    -0x006C
+/* NOLINTEND(bugprone-macro-parentheses) */
 
 /** \} name ASN1 Error codes */
 

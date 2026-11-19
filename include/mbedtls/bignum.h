@@ -21,6 +21,7 @@
 #include <stdio.h>
 #endif
 
+/* NOLINTBEGIN(bugprone-macro-parentheses) */
 /** An error occurred while reading from or writing to a file. */
 #define MBEDTLS_ERR_MPI_FILE_IO_ERROR                     -0x0002
 /** Bad input parameters to function. */
@@ -37,6 +38,7 @@
 #define MBEDTLS_ERR_MPI_NOT_ACCEPTABLE                    -0x000E
 /** Memory allocation failed. */
 #define MBEDTLS_ERR_MPI_ALLOC_FAILED                      -0x0010
+/* NOLINTEND(bugprone-macro-parentheses) */
 
 #define MBEDTLS_MPI_CHK(f)       \
     do                           \

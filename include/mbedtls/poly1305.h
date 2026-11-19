@@ -26,8 +26,10 @@
 #include <stdint.h>
 #include <stddef.h>
 
+/* NOLINTBEGIN(bugprone-macro-parentheses) */
 /** Invalid input parameter(s). */
 #define MBEDTLS_ERR_POLY1305_BAD_INPUT_DATA         -0x0057
+/* NOLINTEND(bugprone-macro-parentheses) */
 
 #ifdef __cplusplus
 extern "C" {

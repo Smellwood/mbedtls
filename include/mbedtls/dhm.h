@@ -58,6 +58,7 @@
 /*
  * DHM Error codes
  */
+/* NOLINTBEGIN(bugprone-macro-parentheses) */
 /** Bad input parameters. */
 #define MBEDTLS_ERR_DHM_BAD_INPUT_DATA                    -0x3080
 /** Reading of the DHM parameters failed. */
@@ -78,6 +79,7 @@
 #define MBEDTLS_ERR_DHM_FILE_IO_ERROR                     -0x3480
 /** Setting the modulus and generator failed. */
 #define MBEDTLS_ERR_DHM_SET_GROUP_FAILED                  -0x3580
+/* NOLINTEND(bugprone-macro-parentheses) */
 
 /** Which parameter to access in mbedtls_dhm_get_value(). */
 typedef enum {
