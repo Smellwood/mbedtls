@@ -163,6 +163,37 @@ component_check_test_dependencies () {
     rm -rf "$out_of_source_dir"
 }
 
+support_check_clang_tidy () {
+    # clang-tidy 18 (the package on Ubuntu 24.04) is the reference version.
+    # Other versions may report different results, so require this one.
+    type clang-tidy-18 >/dev/null 2>&1 && type run-clang-tidy-18 >/dev/null 2>&1
+}
+
+component_check_clang_tidy () {
+    msg "Check: clang-tidy (macro hygiene)"
+    # Use the full configuration to cover as much code as possible.
+    scripts/config.py full
+
+    # Build in order to generate all the generated files and to get a
+    # compilation database that tells clang-tidy how to parse each file.
+    mkdir "$OUT_OF_SOURCE_DIR"
+    cd "$OUT_OF_SOURCE_DIR"
+    cmake -D GEN_FILES=ON -D CMAKE_EXPORT_COMPILE_COMMANDS=ON "$MBEDTLS_ROOT_DIR"
+    make
+    cd "$MBEDTLS_ROOT_DIR"
+
+    # The checks are configured in .clang-tidy. Only analyze the library, and
+    # only report macros defined in this repository (not in TF-PSA-Crypto or
+    # in the framework). Ignore the compiler options that clang doesn't know
+    # because they were chosen for GCC.
+    run-clang-tidy-18 -p "$OUT_OF_SOURCE_DIR" -quiet \
+                      -extra-arg=-Wno-unknown-warning-option \
+                      "-header-filter=^$MBEDTLS_ROOT_DIR/(include|library)/" \
+                      "^$MBEDTLS_ROOT_DIR/library/"
+
+    rm -rf "$OUT_OF_SOURCE_DIR"
+}
+
 component_check_doxygen_warnings () {
     msg "Check: doxygen warnings (builds the documentation)" # ~ 3s
     ./framework/scripts/doxygen.sh
