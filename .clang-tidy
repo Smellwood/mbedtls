@@ -1,0 +1,15 @@
+# clang-tidy configuration, run by the check_clang_tidy component of all.sh.
+#
+# The reference version is clang-tidy 18 (the package on Ubuntu 24.04). Other
+# versions may report different results.
+#
+# bugprone-macro-parentheses enforces macro hygiene (see #9483): every use of a
+# macro argument, and the whole replacement list of a macro that expands to an
+# expression, must be enclosed in parentheses.
+#
+# Where a macro legitimately cannot follow this rule (for example macro
+# arguments that are names of declared objects, or negative integer constants
+# for error codes), suppress the warning locally with a NOLINT comment, ideally
+# with a short justification.
+Checks: '-*,bugprone-macro-parentheses'
+WarningsAsErrors: 'bugprone-macro-parentheses'
