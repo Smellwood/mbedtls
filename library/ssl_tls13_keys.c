@@ -32,8 +32,11 @@ static int local_err_translation(psa_status_t status)
 }
 #define PSA_TO_MBEDTLS_ERR(status) local_err_translation(status)
 
+/* NOLINTBEGIN(bugprone-macro-parentheses):
+ * string is the initializer of a member that is an array of unsigned char. */
 #define MBEDTLS_SSL_TLS1_3_LABEL(name, string)       \
     .name = string,
+/* NOLINTEND(bugprone-macro-parentheses) */
 
 struct mbedtls_ssl_tls13_labels_struct const mbedtls_ssl_tls13_labels =
 {
