@@ -2776,6 +2776,15 @@ x509_oid_numstr:"2a864886f70d":"1.2.840.113549":15:14
 X509 OID numstring #5 (subidentifier > 32 bits)
 x509_oid_numstr:"2a8648f9f8f7f6f5f4f3f2f1f001":"1.2.840.143967032551602640418817":100:32
 
+X509 OID numstring #6 (subidentifier > 32 bits, buffer too small)
+x509_oid_numstr:"2a8648f9f8f7f6f5f4f3f2f1f001":"":32:PSA_ERROR_BUFFER_TOO_SMALL
+
+X509 OID numstring #7 (subidentifier > 32 bits, exact buffer size)
+x509_oid_numstr:"2a8648f9f8f7f6f5f4f3f2f1f001":"1.2.840.143967032551602640418817":33:32
+
+X509 OID numstring #8 (first subidentifier > 32 bits, no room after "2.")
+x509_oid_numstr:"c080808000":"":2:PSA_ERROR_BUFFER_TOO_SMALL
+
 X509 CRT keyUsage #1 (no extension, expected KU)
 depends_on:PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY:PSA_WANT_ALG_SHA_1
 x509_check_key_usage:"../framework/data_files/server1.crt":MBEDTLS_X509_KU_DIGITAL_SIGNATURE|MBEDTLS_X509_KU_KEY_ENCIPHERMENT:0
@@ -3517,6 +3526,13 @@ oid_get_numeric_string:"2BC080808000":0:"1.3.17179869184"
 # ITU-T X.667 clause 8 UUID arc: 2.25.329800735698586629295641978511506172918
 OID get numeric string - 128-bit UUID subidentifier (X.667)
 oid_get_numeric_string:"6983F09DA7EBCFDEE0C7A1A7B2C0948CC8F9D776":0:"2.25.329800735698586629295641978511506172918"
+
+# 2^448-1 is the largest value whose encoding fits in 64 bytes
+OID get numeric string - 448-bit subidentifier (64 bytes)
+oid_get_numeric_string:"69ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7f":0:"2.25.726838724295606890549323807888004534353641360687318060281490199180639288113397923326191050713763565560762521606266177933534601628614655"
+
+OID get numeric string - 449-bit subidentifier (65 bytes)
+oid_get_numeric_string:"698180808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808000":MBEDTLS_ERR_ASN1_INVALID_DATA:""
 
 OID get numeric string - overlong encoding
 oid_get_numeric_string:"8001":MBEDTLS_ERR_ASN1_INVALID_DATA:""
