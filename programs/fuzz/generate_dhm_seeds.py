@@ -12,6 +12,7 @@ PEM parameter buffers include a terminating NUL: mbedtls_dhm_parse_dhm
 only treats a buffer as PEM when dhminlen includes that byte.
 """
 import argparse
+import base64
 import os
 
 PARAM_FILES = ["dhparams.pem", "dh.998.pem", "dh.999.pem", "dh.1000.pem",
@@ -27,6 +28,27 @@ def as_parse_blob(data):
     if b"-----BEGIN" in data and (not data or data[-1:] != b"\0"):
         return data + b"\0"
     return data
+
+
+def der_len(data, pos):
+    """Return (length, position after the length octets)."""
+    first = data[pos]
+    if first < 0x80:
+        return first, pos + 1
+    nbytes = first & 0x7F
+    return int.from_bytes(data[pos + 1:pos + 1 + nbytes], "big"), pos + 1 + nbytes
+
+
+def modulus_p(data):
+    """P from DHParameter ::= SEQUENCE { prime INTEGER, base INTEGER, ... }."""
+    if b"-----BEGIN" in data:
+        text = data.decode("ascii").split("-----BEGIN DH PARAMETERS-----")[1]
+        text = text.split("-----END DH PARAMETERS-----")[0]
+        data = base64.b64decode("".join(text.split()))
+    _, pos = der_len(data, 1)           # SEQUENCE
+    assert data[pos] == 0x02            # INTEGER
+    plen, pos = der_len(data, pos + 1)
+    return int.from_bytes(data[pos:pos + plen], "big")
 
 
 def frame(opts, params, peer):
@@ -61,9 +83,14 @@ def main():
             continue
         params = open(p, "rb").read()
         base = seed_base(pf)
+        # P - 1 is the smallest value rejected by the upper bound of the
+        # range check (2 <= GY <= P - 2).
+        pval = modulus_p(params)
+        peer_pm1 = (pval - 1).to_bytes((pval.bit_length() + 7) // 8, "big")
         for tag, peer in (("valid", peer_ok),
                           ("smallpeer", peer_small),
-                          ("zerospeer", peer_zeros)):
+                          ("zerospeer", peer_zeros),
+                          ("pminus1peer", peer_pm1)):
             with open(os.path.join(args.out, "%s_%s" % (tag, base)),
                       "wb") as fh:
                 fh.write(frame(0, params, peer))
