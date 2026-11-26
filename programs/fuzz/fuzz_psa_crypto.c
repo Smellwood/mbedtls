@@ -237,7 +237,7 @@ static psa_algorithm_t kdf_from_sel(uint8_t s, uint8_t hsel)
 
 static psa_key_type_t key_type_from_sel(uint8_t s)
 {
-    switch (s % 14) {
+    switch (s % 15) {
         case 0: return PSA_KEY_TYPE_RAW_DATA;
         case 1: return PSA_KEY_TYPE_HMAC;
         case 2: return PSA_KEY_TYPE_AES;
@@ -251,7 +251,10 @@ static psa_key_type_t key_type_from_sel(uint8_t s)
         case 10: return PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_K1);
         case 11: return PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_MONTGOMERY);
         case 12: return PSA_KEY_TYPE_DH_KEY_PAIR(PSA_DH_FAMILY_RFC7919);
-        default: return PSA_KEY_TYPE_PASSWORD;
+        case 13: return PSA_KEY_TYPE_PASSWORD;
+        /* the only type accepted for a SECRET key input, which is in turn
+         * what psa_key_derivation_output_key() requires */
+        default: return PSA_KEY_TYPE_DERIVE;
     }
 }
 
@@ -307,6 +310,50 @@ static psa_key_usage_t usage_for_alg(psa_algorithm_t alg)
                PSA_KEY_USAGE_COPY;
     }
     return PSA_KEY_USAGE_EXPORT | PSA_KEY_USAGE_COPY;
+}
+
+/* Two-byte selectors, read in input order. The order in which the arguments
+ * of a function call are evaluated is unspecified in C (gcc and clang differ),
+ * so passing two get8() calls as arguments would map the same input to
+ * different algorithms depending on the compiler. */
+static psa_algorithm_t mac_from_cursor(cursor_t *c)
+{
+    uint8_t s = get8(c);
+    uint8_t hsel = get8(c);
+
+    return mac_from_sel(s, hsel);
+}
+
+static psa_algorithm_t sig_from_cursor(cursor_t *c)
+{
+    uint8_t s = get8(c);
+    uint8_t hsel = get8(c);
+
+    return sig_from_sel(s, hsel);
+}
+
+static psa_algorithm_t kdf_from_cursor(cursor_t *c)
+{
+    uint8_t s = get8(c);
+    uint8_t hsel = get8(c);
+
+    return kdf_from_sel(s, hsel);
+}
+
+static psa_algorithm_t aead_from_cursor(cursor_t *c)
+{
+    uint8_t s = get8(c);
+    uint8_t tag_sel = get8(c);
+
+    return aead_from_sel(s, tag_sel);
+}
+
+static psa_algorithm_t asym_enc_from_cursor(cursor_t *c)
+{
+    uint8_t s = get8(c);
+    uint8_t hsel = get8(c);
+
+    return asym_enc_from_sel(s, hsel);
 }
 
 /* ---- key table ---------------------------------------------------------- */
@@ -391,13 +438,15 @@ static void op_import(cursor_t *c, int persistent)
     if (algsel & 1) {
         alg = cipher_from_sel(get8(c));
     } else {
-        switch (algsel % 6) {
+        /* bit 0 is clear here, so select the family from the other bits:
+         * with algsel % 6 only the even cases would be reachable */
+        switch ((algsel >> 1) % 6) {
             case 0: alg = hash_from_sel(get8(c)); break;
-            case 1: alg = mac_from_sel(get8(c), get8(c)); break;
-            case 2: alg = sig_from_sel(get8(c), get8(c)); break;
-            case 3: alg = kdf_from_sel(get8(c), get8(c)); break;
-            case 4: alg = aead_from_sel(get8(c), get8(c)); break;
-            default: alg = asym_enc_from_sel(get8(c), get8(c)); break;
+            case 1: alg = mac_from_cursor(c); break;
+            case 2: alg = sig_from_cursor(c); break;
+            case 3: alg = kdf_from_cursor(c); break;
+            case 4: alg = aead_from_cursor(c); break;
+            default: alg = asym_enc_from_cursor(c); break;
         }
     }
 
@@ -431,11 +480,11 @@ static void op_generate(cursor_t *c, int persistent)
     if (algsel & 1) {
         alg = cipher_from_sel(get8(c));
     } else {
-        switch (algsel % 5) {
-            case 0: alg = mac_from_sel(get8(c), get8(c)); break;
-            case 1: alg = sig_from_sel(get8(c), get8(c)); break;
-            case 2: alg = aead_from_sel(get8(c), get8(c)); break;
-            case 3: alg = asym_enc_from_sel(get8(c), get8(c)); break;
+        switch ((algsel >> 1) % 5) {
+            case 0: alg = mac_from_cursor(c); break;
+            case 1: alg = sig_from_cursor(c); break;
+            case 2: alg = aead_from_cursor(c); break;
+            case 3: alg = asym_enc_from_cursor(c); break;
             default:
                 /* raw key-agreement policy (ECDH/FFDH) */
                 alg = (get8(c) & 1) ? PSA_ALG_FFDH : PSA_ALG_ECDH;
@@ -591,7 +640,10 @@ static void op_aead(cursor_t *c)
     mbedtls_svc_key_id_t key = pick_key(c);
     uint8_t tsel = get8(c);
     uint8_t nsel = get8(c);
-    psa_algorithm_t alg = aead_from_sel(tsel, nsel);
+    /* bits 0-1 of nsel select one-shot encrypt and set_nonce; the tag length
+     * comes from the remaining bits, so that a round trip can match a key
+     * policy with the default tag length */
+    psa_algorithm_t alg = aead_from_sel(tsel, (uint8_t) (nsel >> 2));
     uint8_t nonce[33];
     size_t noncelen = get_len8(c, sizeof(nonce));
     const uint8_t *np = get_bytes(c, noncelen);
@@ -635,6 +687,9 @@ static void op_aead(cursor_t *c)
         size_t taglen = sizeof(mtag);
 
         if (psa_aead_encrypt_setup(&op, key, alg) == PSA_SUCCESS) {
+            /* CCM needs the lengths before any data; GCM and ChaCha20-Poly1305
+             * accept them too */
+            (void) psa_aead_set_lengths(&op, adlen, ptlen);
             if (nsel & 2) {
                 (void) psa_aead_set_nonce(&op, nonce, noncelen);
             } else {
@@ -666,15 +721,18 @@ static void op_aead(cursor_t *c)
     }
 }
 
+/* Signatures, RSA ciphertexts and FFDH public values have 2-byte lengths:
+ * for RSA-2048 and FFDH-2048 they are 256 bytes, which a 1-byte length
+ * cannot express. */
 static void op_sign_verify_hash(cursor_t *c, int verify)
 {
     mbedtls_svc_key_id_t key = pick_key(c);
-    psa_algorithm_t alg = sig_from_sel(get8(c), get8(c));
+    psa_algorithm_t alg = sig_from_cursor(c);
     size_t hlen = get_len8(c, 128);
     const uint8_t *h = get_bytes(c, hlen);
     uint8_t sig[PSA_SIGNATURE_MAX_SIZE];
     size_t siglen = 0;
-    size_t vlen = get_len8(c, sizeof(sig));
+    size_t vlen = get_len16(c, sizeof(sig));
     const uint8_t *v = get_bytes(c, vlen);
 
     if (h == NULL) {
@@ -697,12 +755,12 @@ static void op_sign_verify_hash(cursor_t *c, int verify)
 static void op_sign_verify_message(cursor_t *c, int verify)
 {
     mbedtls_svc_key_id_t key = pick_key(c);
-    psa_algorithm_t alg = sig_from_sel(get8(c), get8(c));
+    psa_algorithm_t alg = sig_from_cursor(c);
     size_t mlen = get_len8(c, MAX_SMALL);
     const uint8_t *m = get_bytes(c, mlen);
     uint8_t sig[PSA_SIGNATURE_MAX_SIZE];
     size_t siglen = 0;
-    size_t vlen = get_len8(c, sizeof(sig));
+    size_t vlen = get_len16(c, sizeof(sig));
     const uint8_t *v = get_bytes(c, vlen);
 
     if (m == NULL) {
@@ -723,8 +781,8 @@ static void op_sign_verify_message(cursor_t *c, int verify)
 static void op_asymmetric(cursor_t *c, int decrypt)
 {
     mbedtls_svc_key_id_t key = pick_key(c);
-    psa_algorithm_t alg = asym_enc_from_sel(get8(c), get8(c));
-    size_t inlen = get_len8(c, MAX_SMALL);
+    psa_algorithm_t alg = asym_enc_from_cursor(c);
+    size_t inlen = get_len16(c, MAX_SMALL);
     const uint8_t *in = get_bytes(c, inlen);
     size_t saltlen = get_len8(c, 64);
     const uint8_t *salt = get_bytes(c, saltlen);
@@ -751,7 +809,7 @@ static void op_key_agreement(cursor_t *c)
     mbedtls_svc_key_id_t key = pick_key(c);
     uint8_t asel = get8(c);
     psa_algorithm_t alg = (asel & 1) ? PSA_ALG_FFDH : PSA_ALG_ECDH;
-    size_t peerlen = get_len8(c, MAX_SMALL);
+    size_t peerlen = get_len16(c, MAX_SMALL);
     const uint8_t *peer = get_bytes(c, peerlen);
     uint8_t shared[1024]; /* >= raw agreement output for any supported group */
     size_t sharedlen = 0;
@@ -765,7 +823,7 @@ static void op_key_agreement(cursor_t *c)
 
 static void op_kdf(cursor_t *c)
 {
-    psa_algorithm_t alg = kdf_from_sel(get8(c), get8(c));
+    psa_algorithm_t alg = kdf_from_cursor(c);
     psa_key_derivation_operation_t op = psa_key_derivation_operation_init();
     uint8_t steps = get8(c);
     uint8_t i;
@@ -783,6 +841,13 @@ static void op_kdf(cursor_t *c)
         size_t len;
         const uint8_t *p;
 
+        if (s & 0x80) {
+            /* PBKDF2 takes its iteration count as an integer input, before
+             * the salt and the password */
+            (void) psa_key_derivation_input_integer(
+                &op, PSA_KEY_DERIVATION_INPUT_COST, (uint64_t) get8(c) + 1);
+            continue;
+        }
         switch (s % 7) {
             case 0: step = PSA_KEY_DERIVATION_INPUT_SECRET; break;
             case 1: step = PSA_KEY_DERIVATION_INPUT_PASSWORD; break;
@@ -820,7 +885,7 @@ static void op_kdf(cursor_t *c)
                 psa_set_key_type(&attrs, t);
                 psa_set_key_bits(&attrs, key_bits_from_sel(get8(c), t));
                 {
-                    psa_algorithm_t dalg = kdf_from_sel(get8(c), get8(c));
+                    psa_algorithm_t dalg = kdf_from_cursor(c);
 
                     psa_set_key_usage_flags(&attrs, usage_for_alg(dalg));
                     psa_set_key_algorithm(&attrs, dalg);
@@ -864,6 +929,9 @@ static void op_copy_purge_destroy(cursor_t *c, int mode)
         mbedtls_svc_key_id_t dst = MBEDTLS_SVC_KEY_ID_INIT;
 
         (void) psa_get_key_attributes(src, &attrs);
+        /* the attributes carry the source key id; a volatile destination
+         * needs id 0 or psa_copy_key() fails with INVALID_ARGUMENT */
+        psa_set_key_lifetime(&attrs, PSA_KEY_LIFETIME_VOLATILE);
         psa_set_key_usage_flags(&attrs,
                                 usage_for_alg(psa_get_key_algorithm(&attrs)));
         (void) psa_copy_key(src, &attrs, &dst);
