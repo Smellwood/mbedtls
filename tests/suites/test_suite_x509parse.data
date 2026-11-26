@@ -1131,6 +1131,10 @@ X509 CRT verification: Name Constraints, directoryName not permitted
 depends_on:MBEDTLS_PEM_PARSE_C:PSA_WANT_ALG_SHA_256:PSA_HAVE_ALG_ECDSA_VERIFY:PSA_WANT_ECC_SECP_R1_256:PSA_WANT_ECC_SECP_R1_384
 x509_verify:"../framework/data_files/nc-dirname-bad.crt":"../framework/data_files/nc-root.crt":"../framework/data_files/crl-ec-sha256.pem":"NULL":MBEDTLS_ERR_X509_CERT_VERIFY_FAILED:MBEDTLS_X509_BADCERT_NAME_CONSTRAINTS:"":"NULL"
 
+X509 CRT verification: Name Constraints, directoryName, subject shorter than base
+depends_on:MBEDTLS_PEM_PARSE_C:PSA_WANT_ALG_SHA_256:PSA_HAVE_ALG_ECDSA_VERIFY:PSA_WANT_ECC_SECP_R1_256:PSA_WANT_ECC_SECP_R1_384
+x509_verify:"../framework/data_files/nc-dirname-short.crt":"../framework/data_files/nc-root.crt":"../framework/data_files/crl-ec-sha256.pem":"NULL":MBEDTLS_ERR_X509_CERT_VERIFY_FAILED:MBEDTLS_X509_BADCERT_NAME_CONSTRAINTS:"":"NULL"
+
 X509 CRT verification: Name Constraints, directoryName excluded
 depends_on:MBEDTLS_PEM_PARSE_C:PSA_WANT_ALG_SHA_256:PSA_HAVE_ALG_ECDSA_VERIFY:PSA_WANT_ECC_SECP_R1_256:PSA_WANT_ECC_SECP_R1_384
 x509_verify:"../framework/data_files/nc-dirname-excl.crt":"../framework/data_files/nc-root.crt":"../framework/data_files/crl-ec-sha256.pem":"NULL":MBEDTLS_ERR_X509_CERT_VERIFY_FAILED:MBEDTLS_X509_BADCERT_NAME_CONSTRAINTS:"":"NULL"

@@ -3428,7 +3428,7 @@ static int x509_nc_dn_match(const mbedtls_x509_name *name, const mbedtls_x509_bu
         return X509_NC_UNSUPPORTED;
     }
 
-    for (; base != NULL && ret == 0; base = base->next, name = name->next) {
+    for (; base != NULL; base = base->next, name = name->next) {
         if (name == NULL ||
             name->oid.tag != base->oid.tag ||
             name->oid.len != base->oid.len ||
@@ -3436,6 +3436,7 @@ static int x509_nc_dn_match(const mbedtls_x509_name *name, const mbedtls_x509_bu
             x509_string_cmp(&name->val, &base->val) != 0 ||
             name->next_merged != base->next_merged) {
             ret = X509_NC_NO_MATCH;
+            break;
         }
     }
 
