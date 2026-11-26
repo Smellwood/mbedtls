@@ -26,6 +26,7 @@
 #define TEST_EARLY_DATA_NO_INITIAL_ALPN 6
 #define TEST_EARLY_DATA_NO_LATER_ALPN 7
 #define TEST_EARLY_DATA_DIFF_ALPN_ON_RESUMPTION 8
+#define TEST_EARLY_DATA_OLD_ALPN_AFTER_RESUMPTION 9
 
 /* Mutations for ssl_session_load_rejects_bad_serialized_data */
 #define TEST_SESSION_LOAD_TRAILING_DATA          0
@@ -4878,6 +4879,7 @@ void tls13_read_early_data(int scenario)
         case TEST_EARLY_DATA_DIFF_ALPN:
         case TEST_EARLY_DATA_NO_LATER_ALPN:
         case TEST_EARLY_DATA_DIFF_ALPN_ON_RESUMPTION:
+        case TEST_EARLY_DATA_OLD_ALPN_AFTER_RESUMPTION:
             client_options.alpn_list[0] = "ALPNExample";
             client_options.alpn_list[1] = NULL;
             server_options.alpn_list[0] = "ALPNExample";
@@ -4891,7 +4893,8 @@ void tls13_read_early_data(int scenario)
     TEST_EQUAL(ret, 0);
 
 #if defined(MBEDTLS_SSL_ALPN)
-    if (scenario == TEST_EARLY_DATA_DIFF_ALPN_ON_RESUMPTION) {
+    if (scenario == TEST_EARLY_DATA_DIFF_ALPN_ON_RESUMPTION ||
+        scenario == TEST_EARLY_DATA_OLD_ALPN_AFTER_RESUMPTION) {
         client_options.alpn_list[0] = "ALPNExample2";
         server_options.alpn_list[0] = "ALPNExample2";
         ret = mbedtls_test_get_tls13_ticket(&client_options, &server_options,
@@ -4932,6 +4935,16 @@ void tls13_read_early_data(int scenario)
             server_options.alpn_list[1] = NULL;
             break;
         case TEST_EARLY_DATA_DIFF_ALPN_ON_RESUMPTION:
+            break;
+        case TEST_EARLY_DATA_OLD_ALPN_AFTER_RESUMPTION:
+            /* The ticket was issued in a session resumed with ALPNExample2,
+             * so it must not allow early data with the original ALPN. */
+            client_options.alpn_list[0] = "ALPNExample";
+            server_options.alpn_list[0] = "ALPNExample";
+            mbedtls_debug_set_threshold(3);
+            server_pattern.pattern =
+                "EarlyData: rejected, the selected ALPN is different "
+                "from the one associated with the pre-shared key.";
             break;
         case TEST_EARLY_DATA_DIFF_ALPN:
         case TEST_EARLY_DATA_NO_INITIAL_ALPN:
@@ -5026,6 +5039,7 @@ void tls13_read_early_data(int scenario)
         case TEST_EARLY_DATA_DIFF_ALPN:
         case TEST_EARLY_DATA_NO_INITIAL_ALPN:
         case TEST_EARLY_DATA_NO_LATER_ALPN:
+        case TEST_EARLY_DATA_OLD_ALPN_AFTER_RESUMPTION:
 #endif
             TEST_EQUAL(ret, 0);
             TEST_EQUAL(server_ep.ssl.handshake->early_data_accepted, 0);

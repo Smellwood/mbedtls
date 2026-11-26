@@ -2590,6 +2590,7 @@ int mbedtls_test_get_tls13_ticket(
 {
     int ret = -1;
     int ok = 0;
+    int resuming;
     unsigned char buf[64];
     mbedtls_test_ssl_endpoint client_ep, server_ep;
 
@@ -2613,7 +2614,8 @@ int mbedtls_test_get_tls13_ticket(
                                            &(server_ep.socket), 1024);
     TEST_EQUAL(ret, 0);
 
-    if (session->tls_version == MBEDTLS_SSL_VERSION_TLS1_3) {
+    resuming = (session->tls_version == MBEDTLS_SSL_VERSION_TLS1_3);
+    if (resuming) {
         ret = mbedtls_ssl_set_session(&(client_ep.ssl), session);
         TEST_EQUAL(ret, 0);
     }
@@ -2621,6 +2623,10 @@ int mbedtls_test_get_tls13_ticket(
     TEST_EQUAL(mbedtls_test_move_handshake_to_state(
                    &(server_ep.ssl), &(client_ep.ssl),
                    MBEDTLS_SSL_HANDSHAKE_OVER), 0);
+
+    /* Make sure the server really resumed the given session: a full
+     * handshake would also issue a ticket, but would not test resumption. */
+    TEST_EQUAL(server_ep.ssl.handshake->resume, resuming);
 
     TEST_EQUAL(server_ep.ssl.handshake->new_session_tickets_count, 0);
 
