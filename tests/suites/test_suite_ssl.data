@@ -3629,10 +3629,22 @@ TLS 1.3 HRR: CH2 cannot change closed SNI to open
 tls13_srv_hrr_sni_consistency:TEST_TLS13_HRR_SNI_CLOSED:TEST_TLS13_HRR_SNI_OPEN
 
 TLS 1.3 server: ChangeCipherSpec before the first ClientHello
-tls13_srv_ccs_before_client_hello:0
+tls13_srv_ccs_before_client_hello:0:MBEDTLS_SSL_VERSION_TLS1_3:MBEDTLS_SSL_VERSION_TLS1_3
 
 TLS 1.3 server: ChangeCipherSpec before the second ClientHello
-tls13_srv_ccs_before_client_hello:1
+tls13_srv_ccs_before_client_hello:1:MBEDTLS_SSL_VERSION_TLS1_3:MBEDTLS_SSL_VERSION_TLS1_3
+
+TLS 1.2+1.3 server: ChangeCipherSpec before the first ClientHello, TLS 1.3 client
+depends_on:MBEDTLS_SSL_PROTO_TLS1_2
+tls13_srv_ccs_before_client_hello:0:MBEDTLS_SSL_VERSION_TLS1_2:MBEDTLS_SSL_VERSION_TLS1_3
+
+TLS 1.2+1.3 server: ChangeCipherSpec before the second ClientHello, TLS 1.3 client
+depends_on:MBEDTLS_SSL_PROTO_TLS1_2
+tls13_srv_ccs_before_client_hello:1:MBEDTLS_SSL_VERSION_TLS1_2:MBEDTLS_SSL_VERSION_TLS1_3
+
+TLS 1.2+1.3 server: ChangeCipherSpec before the first ClientHello, TLS 1.2 client
+depends_on:MBEDTLS_SSL_PROTO_TLS1_2:MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+tls13_srv_ccs_before_client_hello:0:MBEDTLS_SSL_VERSION_TLS1_2:MBEDTLS_SSL_VERSION_TLS1_2
 
 TLS 1.3 server accepts compliant CH2, sanity check tls13_srv_rejects_inconsistent_ch2
 depends_on:MBEDTLS_TEST_HAS_TLS1_3_AES_128_GCM_SHA256
