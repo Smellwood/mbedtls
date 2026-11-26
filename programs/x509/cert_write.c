@@ -302,17 +302,28 @@ static int parse_serial_decimal_format(unsigned char *obuf, size_t obufmax,
  * requires the keyCertSign bit to be set in the keyUsage extension of a
  * certificate that signs certificates, if that extension is present.
  *
- * Certificates without a basicConstraints extension are accepted so that
- * v1 and v2 certificates, which cannot carry extensions, keep working.
+ * v1 and v2 certificates, which cannot carry extensions, are accepted
+ * without a basicConstraints extension so that they keep working. A v3
+ * certificate without basicConstraints is rejected, since X.509 chain
+ * verification does not accept it as a CA either.
  *
  * This prints the reason for a rejection. Return 0 if the certificate may
  * be used to issue certificates, or -1 otherwise.
  */
 static int check_issuer_can_sign(const mbedtls_x509_crt *issuer_crt)
 {
-    if (mbedtls_x509_crt_get_ca_istrue(issuer_crt) == 0) {
+    int ca_istrue = mbedtls_x509_crt_get_ca_istrue(issuer_crt);
+
+    if (ca_istrue == 0) {
         mbedtls_printf(" failed\n  !  the issuer certificate is not a CA: "
                        "the basicConstraints extension has cA=FALSE\n\n");
+        return -1;
+    }
+
+    if (ca_istrue < 0 && issuer_crt->version >= 3) {
+        mbedtls_printf(" failed\n  !  the issuer certificate is not a CA: "
+                       "it is a v3 certificate without the "
+                       "basicConstraints extension\n\n");
         return -1;
     }
 
