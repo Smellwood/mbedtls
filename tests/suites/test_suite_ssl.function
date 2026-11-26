@@ -6593,6 +6593,150 @@ exit:
 }
 /* END_CASE */
 
+/* BEGIN_CASE depends_on:MBEDTLS_SSL_KEYING_MATERIAL_EXPORT:MBEDTLS_SSL_PROTO_DTLS:MBEDTLS_SSL_HANDSHAKE_WITH_CERT_ENABLED:PSA_WANT_ECC_SECP_R1_384:PSA_WANT_ALG_SHA_256:MBEDTLS_SSL_CACHE_C */
+void ssl_dtls_exporter_before_wrapup_resumed()
+{
+    /* Same as ssl_dtls_exporter_before_wrapup, but in an abbreviated
+     * handshake, where the client sends the last flight. */
+    int ret = -1;
+    unsigned char key_server[48];
+    unsigned char key_client[48];
+    char label[] = "test-label";
+    mbedtls_test_ssl_endpoint client_ep, server_ep;
+    mbedtls_ssl_session saved_session;
+    memset(&client_ep, 0, sizeof(client_ep));
+    memset(&server_ep, 0, sizeof(server_ep));
+    mbedtls_ssl_session_init(&saved_session);
+    mbedtls_test_handshake_test_options options;
+
+    MD_OR_USE_PSA_INIT();
+    mbedtls_test_init_handshake_options(&options);
+    options.dtls = 1;
+
+    /* Full handshake, then grab the session. */
+    TEST_EQUAL(mbedtls_test_ssl_endpoint_init(&client_ep, MBEDTLS_SSL_IS_CLIENT, &options), 0);
+    TEST_EQUAL(mbedtls_test_ssl_endpoint_init(&server_ep, MBEDTLS_SSL_IS_SERVER, &options), 0);
+    TEST_EQUAL(mbedtls_test_ssl_dtls_join_endpoints(&client_ep, &server_ep), 0);
+    TEST_EQUAL(mbedtls_test_mock_socket_connect(&client_ep.socket, &server_ep.socket, 17000), 0);
+    TEST_EQUAL(mbedtls_test_move_handshake_to_state(&client_ep.ssl, &server_ep.ssl,
+                                                    MBEDTLS_SSL_HANDSHAKE_OVER), 0);
+    ret = mbedtls_test_move_handshake_to_state(&server_ep.ssl, &client_ep.ssl,
+                                               MBEDTLS_SSL_HANDSHAKE_OVER);
+    TEST_ASSERT(ret == 0 ||
+                ret == MBEDTLS_ERR_SSL_WANT_READ || ret == MBEDTLS_ERR_SSL_WANT_WRITE);
+    /* Let application data flow so the server's deferred wrapup runs and
+     * the session gets cached. */
+    TEST_EQUAL(mbedtls_test_ssl_exchange_data(&client_ep.ssl, 100, 1,
+                                              &server_ep.ssl, 100, 1), 0);
+    TEST_EQUAL(mbedtls_ssl_get_session(&client_ep.ssl, &saved_session), 0);
+    mbedtls_test_ssl_endpoint_free(&server_ep);
+    mbedtls_test_ssl_endpoint_free(&client_ep);
+    memset(&client_ep, 0, sizeof(client_ep));
+    memset(&server_ep, 0, sizeof(server_ep));
+
+    /* Abbreviated handshake: the client sends the last flight. */
+    TEST_EQUAL(mbedtls_test_ssl_endpoint_init(&client_ep, MBEDTLS_SSL_IS_CLIENT, &options), 0);
+    TEST_EQUAL(mbedtls_test_ssl_endpoint_init(&server_ep, MBEDTLS_SSL_IS_SERVER, &options), 0);
+    TEST_EQUAL(mbedtls_ssl_set_session(&client_ep.ssl, &saved_session), 0);
+    TEST_EQUAL(mbedtls_test_ssl_dtls_join_endpoints(&client_ep, &server_ep), 0);
+    TEST_EQUAL(mbedtls_test_mock_socket_connect(&client_ep.socket, &server_ep.socket, 17000), 0);
+    ret = mbedtls_test_move_handshake_to_state(&server_ep.ssl, &client_ep.ssl,
+                                               MBEDTLS_SSL_HANDSHAKE_OVER);
+    TEST_EQUAL(ret, 0);
+    ret = mbedtls_test_move_handshake_to_state(&client_ep.ssl, &server_ep.ssl,
+                                               MBEDTLS_SSL_HANDSHAKE_OVER);
+    TEST_ASSERT(ret == 0 ||
+                ret == MBEDTLS_ERR_SSL_WANT_READ || ret == MBEDTLS_ERR_SSL_WANT_WRITE);
+    TEST_ASSERT(mbedtls_ssl_is_handshake_over(&client_ep.ssl));
+    TEST_ASSERT(mbedtls_ssl_is_handshake_over(&server_ep.ssl));
+    TEST_EQUAL(client_ep.ssl.handshake->resume, 1);
+    /* The client sent the last flight, so its wrapup is still pending. */
+    TEST_ASSERT(client_ep.ssl.transform == NULL);
+    TEST_EQUAL(mbedtls_ssl_export_keying_material(&client_ep.ssl, key_client, sizeof(key_client),
+                                                  label, sizeof(label), NULL, 0, 0), 0);
+    TEST_EQUAL(mbedtls_ssl_export_keying_material(&server_ep.ssl, key_server, sizeof(key_server),
+                                                  label, sizeof(label), NULL, 0, 0), 0);
+    TEST_MEMORY_COMPARE(key_server, sizeof(key_server), key_client, sizeof(key_client));
+
+exit:
+    mbedtls_ssl_session_free(&saved_session);
+    mbedtls_test_ssl_endpoint_free(&server_ep);
+    mbedtls_test_ssl_endpoint_free(&client_ep);
+    mbedtls_test_free_handshake_options(&options);
+    MD_OR_USE_PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_SSL_KEYING_MATERIAL_EXPORT:MBEDTLS_SSL_PROTO_DTLS:MBEDTLS_SSL_HANDSHAKE_WITH_CERT_ENABLED:PSA_WANT_ECC_SECP_R1_384:PSA_WANT_ALG_SHA_256:MBEDTLS_SSL_RENEGOTIATION */
+void ssl_dtls_exporter_before_wrapup_reneg()
+{
+    /* After a renegotiation, the endpoint that sent the last flight still
+     * has the previous transform in ssl->transform until its wrapup runs.
+     * The exporter must use the randoms of the current handshake, which
+     * the peer uses. */
+    int ret = -1;
+    unsigned char key_server[48];
+    unsigned char key_client[48];
+    unsigned char buf[100];
+    char label[] = "test-label";
+    mbedtls_test_ssl_endpoint client_ep, server_ep;
+    memset(&client_ep, 0, sizeof(client_ep));
+    memset(&server_ep, 0, sizeof(server_ep));
+    mbedtls_test_handshake_test_options options;
+
+    MD_OR_USE_PSA_INIT();
+    mbedtls_test_init_handshake_options(&options);
+    options.dtls = 1;
+    options.renegotiate = 1;
+    options.legacy_renegotiation = MBEDTLS_SSL_LEGACY_NO_RENEGOTIATION;
+
+    TEST_EQUAL(mbedtls_test_ssl_endpoint_init(&client_ep, MBEDTLS_SSL_IS_CLIENT, &options), 0);
+    TEST_EQUAL(mbedtls_test_ssl_endpoint_init(&server_ep, MBEDTLS_SSL_IS_SERVER, &options), 0);
+    TEST_EQUAL(mbedtls_test_ssl_dtls_join_endpoints(&client_ep, &server_ep), 0);
+    TEST_EQUAL(mbedtls_test_mock_socket_connect(&client_ep.socket, &server_ep.socket, 17000), 0);
+    TEST_EQUAL(mbedtls_test_move_handshake_to_state(&client_ep.ssl, &server_ep.ssl,
+                                                    MBEDTLS_SSL_HANDSHAKE_OVER), 0);
+    ret = mbedtls_test_move_handshake_to_state(&server_ep.ssl, &client_ep.ssl,
+                                               MBEDTLS_SSL_HANDSHAKE_OVER);
+    TEST_ASSERT(ret == 0 ||
+                ret == MBEDTLS_ERR_SSL_WANT_READ || ret == MBEDTLS_ERR_SSL_WANT_WRITE);
+    TEST_EQUAL(mbedtls_test_ssl_exchange_data(&client_ep.ssl, 100, 1,
+                                              &server_ep.ssl, 100, 1), 0);
+    TEST_ASSERT(server_ep.ssl.transform != NULL);
+    TEST_ASSERT(client_ep.ssl.transform != NULL);
+
+    /* Client-initiated full renegotiation: the server sends the last flight. */
+    for (int i = 0; i < 50; i++) {
+        if (client_ep.ssl.renego_status == MBEDTLS_SSL_RENEGOTIATION_DONE &&
+            mbedtls_ssl_is_handshake_over(&server_ep.ssl) &&
+            server_ep.ssl.renego_status != MBEDTLS_SSL_INITIAL_HANDSHAKE) {
+            break;
+        }
+        ret = mbedtls_ssl_renegotiate(&client_ep.ssl);
+        ret = mbedtls_ssl_read(&server_ep.ssl, buf, sizeof(buf));
+        (void) ret;
+    }
+    TEST_EQUAL(client_ep.ssl.renego_status, MBEDTLS_SSL_RENEGOTIATION_DONE);
+    TEST_ASSERT(mbedtls_ssl_is_handshake_over(&server_ep.ssl));
+    TEST_ASSERT(mbedtls_ssl_is_handshake_over(&client_ep.ssl));
+    /* The server sent the last flight, so ssl->transform is still the
+     * transform of the previous handshake. */
+    TEST_ASSERT(server_ep.ssl.transform != NULL);
+    TEST_ASSERT(server_ep.ssl.transform != server_ep.ssl.transform_in);
+    TEST_EQUAL(mbedtls_ssl_export_keying_material(&client_ep.ssl, key_client, sizeof(key_client),
+                                                  label, sizeof(label), NULL, 0, 0), 0);
+    TEST_EQUAL(mbedtls_ssl_export_keying_material(&server_ep.ssl, key_server, sizeof(key_server),
+                                                  label, sizeof(label), NULL, 0, 0), 0);
+    TEST_MEMORY_COMPARE(key_server, sizeof(key_server), key_client, sizeof(key_client));
+
+exit:
+    mbedtls_test_ssl_endpoint_free(&server_ep);
+    mbedtls_test_ssl_endpoint_free(&client_ep);
+    mbedtls_test_free_handshake_options(&options);
+    MD_OR_USE_PSA_DONE();
+}
+/* END_CASE */
+
 /* BEGIN_CASE depends_on:MBEDTLS_SSL_KEYING_MATERIAL_EXPORT:MBEDTLS_SSL_HANDSHAKE_WITH_CERT_ENABLED:PSA_WANT_ECC_SECP_R1_384:PSA_WANT_ALG_SHA_256 */
 void ssl_tls_exporter_uses_label(int proto)
 {

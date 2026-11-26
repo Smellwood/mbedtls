@@ -4,4 +4,6 @@ Bugfix
      handshake (typically the server), after the handshake has completed but
      before the retransmission window has closed. This notably affected
      DTLS-SRTP (RFC 5764) style usage, where keying material is exported
-     immediately after the handshake.
+     immediately after the handshake. In the same situation after a
+     renegotiation, the exported keying material was computed from the
+     randoms of the previous handshake and did not match the peer's.

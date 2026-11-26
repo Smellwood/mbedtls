@@ -8949,11 +8949,12 @@ static int mbedtls_ssl_tls12_export_keying_material(const mbedtls_ssl_context *s
     }
 
     /* On DTLS, the endpoint that sent the last flight of the handshake
-     * keeps ssl->transform unset until its handshake wrapup runs at the end
-     * of the retransmission window. The negotiated transform is already
-     * installed for reading at that point, so fall back to it. */
-    const mbedtls_ssl_transform *transform =
-        ssl->transform != NULL ? ssl->transform : ssl->transform_in;
+     * only switches ssl->transform at the end of the retransmission window:
+     * until then it is NULL after an initial handshake, or the previous
+     * transform after a renegotiation. The transform negotiated by the
+     * latest handshake is already installed for reading at that point
+     * (and is the same as ssl->transform afterwards), so use it. */
+    const mbedtls_ssl_transform *transform = ssl->transform_in;
     memcpy(prf_input,
            transform->randbytes + MBEDTLS_SERVER_HELLO_RANDOM_LEN,
            MBEDTLS_CLIENT_HELLO_RANDOM_LEN);
