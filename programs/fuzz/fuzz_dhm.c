@@ -86,7 +86,9 @@ int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size)
 
     /* 2. make our public value (RNG-driven private exponent; 3.6 has no
      * public read_private API) */
-    (void) mbedtls_dhm_make_public(&dhm, 32, out, MAX_BLOB,
+    /* olen must not exceed the size of P: GX is written as exactly olen
+     * bytes, and mbedtls_dhm_make_public() rejects a larger olen. */
+    (void) mbedtls_dhm_make_public(&dhm, 32, out, mbedtls_dhm_get_len(&dhm),
                                    dummy_random, &ctr_drbg);
 
     /* 3. attacker public value (range validation paths) */

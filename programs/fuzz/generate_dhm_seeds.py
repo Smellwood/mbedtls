@@ -48,9 +48,12 @@ def main():
 
     os.makedirs(args.out, exist_ok=True)
     n = 0
-    peer_ok = bytes((i * 5 + 3) & 0xFF for i in range(256))
+    # mbedtls_dhm_read_public() rejects a value longer than P, and the
+    # smallest P here (dh.998/999/1000.pem) is 125 bytes, so keep the
+    # in-range peer value at 124 bytes (it is then < P for every file).
+    peer_ok = bytes((i * 5 + 3) & 0xFF for i in range(124))
     peer_small = bytes([1])             # < 2: reject path
-    peer_zeros = bytes(256)             # zero value
+    peer_zeros = bytes(124)             # zero value: range-check reject
 
     for pf in PARAM_FILES:
         p = os.path.join(args.data_files, pf)
