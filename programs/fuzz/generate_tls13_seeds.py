@@ -58,7 +58,7 @@ def hkdf_expand(prk, info, length):
 
 def expand_label(secret, label, context, length):
     full = b"tls13 " + label
-    info = u16(length) + u8(len(full)) + full + u16(len(context)) + context
+    info = u16(length) + u8(len(full)) + full + u8(len(context)) + context
     return hkdf_expand(secret, info, length)
 
 
@@ -77,36 +77,33 @@ def compute_binder(ch_truncated):
 
 
 def client_hello(random32, sid32, suites, exts,
-                 psk_identities=None, binders_len=34):
-    """ClientHello handshake message; zero-filled binder region if psk given.
+                 psk_identities=None):
+    """ClientHello handshake message; zero-filled binder if psk given.
 
-    Returns (msg, binder_pos) where binder_pos is the offset of the binder
-    value inside msg (or None). The outer lengths are final so that
-    msg[:binder_pos] is exactly the RFC 8446 truncated transcript.
+    Returns (msg, binders_pos) where binders_pos is the offset of the
+    binders list (its 2-byte length) inside msg, or None. msg[:binders_pos]
+    is the RFC 8446 section 4.2.11.2 truncated transcript.
     """
     body = (b"\x03\x03" + random32 + u8(len(sid32)) + sid32 +
             u16(len(suites)) + suites + b"\x01\x00")
-    binder_pos = None
     ext_blob = b""
     for t, b in exts:
         ext_blob += ext(t, b)
+    binders_pos = None
     if psk_identities is not None:
-        binders = b"\x00" * (binders_len - 2)
-        body_ext = psk_identities + u16(binders_len) + binders
-        binder_pos = (len(body) + 2 + len(ext_blob) + 4 +
-                      len(psk_identities) + 2)
-        ext_blob += ext(41, body_ext)
+        binders = u16(1 + SHA256_LEN) + u8(SHA256_LEN) + b"\x00" * SHA256_LEN
+        ext_blob += ext(41, u16(len(psk_identities)) + psk_identities +
+                        binders)
+        binders_pos = 4 + len(body) + 2 + len(ext_blob) - len(binders)
     body += u16(len(ext_blob)) + ext_blob
     msg = u8(1) + u24(len(body)) + body
-    if binder_pos is not None:
-        msg = (msg[:binder_pos] + u16(32) +
-               msg[binder_pos + 2 + 32:])
-    return msg, binder_pos
+    return msg, binders_pos
 
 
-def splice_binder(msg, binder_pos, binder):
-    return msg[:binder_pos] + u16(len(binder)) + binder + \
-        msg[binder_pos + 2 + len(binder):]
+def splice_binder(msg, binders_pos, binder):
+    assert len(binder) == SHA256_LEN
+    start = binders_pos + 3
+    return msg[:start] + binder + msg[start + SHA256_LEN:]
 
 
 TLS13_SUITES = bytes.fromhex("130113021303")
@@ -174,7 +171,9 @@ def build_seeds():
     seeds["ch_p256"] = record(msg) + b"\x00"
 
     # 3. HRR flow: x25519-only CH then a P-256 retry CH (options 0x08)
-    msg1, _ = client_hello(RND, SID, TLS13_SUITES, base_exts([0x001d]))
+    exts1 = [e for e in base_exts([0x001d, 0x0017]) if e[0] != 51]
+    exts1 += key_share_ext([0x001d])  # offer P-256, share x25519 only
+    msg1, _ = client_hello(RND, SID, TLS13_SUITES, exts1)
     msg2, _ = client_hello(bytes([(i * 3 + 7) & 0xFF for i in range(32)]),
                            SID, TLS13_SUITES, base_exts([0x0017]))
     seeds["ch_hrr_retry"] = record(msg1) + record(msg2) + b"\x08"
@@ -210,7 +209,7 @@ def build_seeds():
 
     # 11. GREASE suite/group/extension values
     exts = [(0x0a0a, b"\x00\x00")] + base_exts([0x001d, 0x0017])
-    msg, _ = client_hello(RND, SID, bytes.fromhex("13a113a2c02bc030"), exts)
+    msg, _ = client_hello(RND, SID, bytes.fromhex("0a0a1301c02bc030"), exts)
     seeds["ch_grease"] = record(msg) + b"\x00"
 
     # 12. empty key_share extension (HRR decision logic)
