@@ -247,6 +247,7 @@ usage:
                 } else {
                     mbedtls_printf(
                         "Invalid argument for option SAN: Entry must be of the form TYPE:value\n");
+                    mbedtls_free(cur);
                     goto usage;
                 }
                 if (strcmp(q, "RFC822") == 0) {
@@ -271,6 +272,7 @@ usage:
                         mbedtls_printf("mbedtls_x509_crt_parse_cn_inet_pton failed to parse %s\n",
                                        subtype_value);
                         mbedtls_free(ip);
+                        mbedtls_free(cur);
                         goto exit;
                     }
                     cur->node.san.unstructured_name.p = ip;
@@ -292,6 +294,7 @@ usage:
                             " failed\n  !  mbedtls_x509_string_to_names "
                             "returned -0x%04x - %s\n\n",
                             (unsigned int) -ret, buf);
+                        mbedtls_free(cur);
                         goto exit;
                     }
                     cur->node.san.directory_name = *tmp_san_dirname;
