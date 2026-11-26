@@ -299,6 +299,9 @@ x509_set_validity_check:"19500101000000":"20490101000000":0
 Set validity: valid, 29 February in a leap year
 x509_set_validity_check:"20240229000000":"20280229235959":0
 
+Set validity: valid, 29 February 2000 (leap year, divisible by 400)
+x509_set_validity_check:"20000229000000":"20290210144406":0
+
 Set validity: too short
 x509_set_validity_check:"2019021014440":"20290210144406":MBEDTLS_ERR_X509_BAD_INPUT_DATA
 
